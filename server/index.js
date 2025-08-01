@@ -41,21 +41,25 @@ const authRoutes = require('./routes/auth');
 const foodRoutes = require('./routes/food');
 const userRoutes = require('./routes/users');
 
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/food', foodRoutes);
 app.use('/api/users', userRoutes);
 
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Community Fridge API is running!' });
+});
+
+// Serve static files in production
 if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the React app
   app.use(express.static(path.join(__dirname, '../client/build')));
   
+  // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
 }
-
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Community Fridge API is running!' });
-});
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
