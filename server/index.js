@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -15,7 +16,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // Add a health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    port: PORT
+  });
 });
 
 // Connect to MongoDB with better error handling
@@ -52,13 +58,37 @@ app.get('/api/test', (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from the React app
-  app.use(express.static(path.join(__dirname, '../client/build')));
+  const buildPath = path.join(__dirname, '../client/build');
+  const indexPath = path.join(buildPath, 'index.html');
   
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-  });
+  console.log('Production mode - serving static files');
+  console.log('Build path:', buildPath);
+  console.log('Index path:', indexPath);
+  
+  // Check if build directory exists
+  if (fs.existsSync(buildPath)) {
+    console.log('Build directory exists');
+    app.use(express.static(buildPath));
+    
+    // Handle React routing, return all requests to React app
+    app.get('*', (req, res) => {
+      console.log('Serving React app for:', req.path);
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(404).json({ error: 'React app not found' });
+      }
+    });
+  } else {
+    console.log('Build directory does not exist, serving API only');
+    app.get('*', (req, res) => {
+      res.json({ 
+        message: 'API is running but React app is not built',
+        buildPath: buildPath,
+        exists: fs.existsSync(buildPath)
+      });
+    });
+  }
 }
 
 app.use((err, req, res, next) => {
