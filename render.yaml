@@ -8,4 +8,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        sync: false 
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 10000 
