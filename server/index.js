@@ -76,16 +76,52 @@ if (process.env.NODE_ENV === 'production') {
       if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
       } else {
-        res.status(404).json({ error: 'React app not found' });
+        res.status(404).json({ 
+          error: 'React app not found',
+          buildPath: buildPath,
+          indexPath: indexPath,
+          buildExists: fs.existsSync(buildPath),
+          indexExists: fs.existsSync(indexPath)
+        });
       }
     });
   } else {
     console.log('Build directory does not exist, serving API only');
+    app.get('/', (req, res) => {
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Community Fridge App</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .container { max-width: 600px; margin: 0 auto; }
+            .endpoint { background: #f5f5f5; padding: 10px; margin: 5px 0; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🚀 Community Fridge App</h1>
+            <p>Your API is running successfully! The React app is not built yet.</p>
+            <h2>Available Endpoints:</h2>
+            <div class="endpoint"><strong>Health Check:</strong> <a href="/health">/health</a></div>
+            <div class="endpoint"><strong>API Test:</strong> <a href="/api/test">/api/test</a></div>
+            <div class="endpoint"><strong>Auth Routes:</strong> /api/auth/*</div>
+            <div class="endpoint"><strong>Food Routes:</strong> /api/food/*</div>
+            <div class="endpoint"><strong>User Routes:</strong> /api/users/*</div>
+            <p><em>Check your Render logs to see why the React app isn't building.</em></p>
+          </div>
+        </body>
+        </html>
+      `);
+    });
+    
     app.get('*', (req, res) => {
       res.json({ 
         message: 'API is running but React app is not built',
         buildPath: buildPath,
-        exists: fs.existsSync(buildPath)
+        exists: fs.existsSync(buildPath),
+        availableEndpoints: ['/health', '/api/test', '/api/auth', '/api/food', '/api/users']
       });
     });
   }
