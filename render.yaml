@@ -2,7 +2,7 @@ services:
   - type: web
     name: community-fridge-app
     env: node
-    buildCommand: npm run build
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: npm start
     envVars:
       - key: NODE_ENV
